@@ -31,7 +31,7 @@ steps:
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes; docker buildx rm default; 
         docker buildx create --name nubuilder; 
         docker buildx use nubuilder; docker buildx inspect --bootstrap
-      failOnStderr: true
+      failOnStderr: false
   - task: PowerShell@2
     displayName: Ensure unix line endings
     inputs:
@@ -47,7 +47,7 @@ steps:
           $text = [IO.File]::ReadAllText($file.FullName) -replace "`r`n", "`n"
           [IO.File]::WriteAllText($file.FullName, $text)
         }
-      failOnStderr: true
+      failOnStderr: false
   - task: PowerShell@2
     displayName: Log the pipeline variables
     inputs:
@@ -56,21 +56,21 @@ steps:
         Write-Host "Build arguments: ${{ parameters.buildArguments }}"
         Write-Host "Repository: ${{ parameters.registry }}/${{ parameters.repository }}/${{ parameters.appName }}"
         Write-Host "platforms: ${{ parameters.platforms }}"
-      failOnStderr: true
+      failOnStderr: false
   - task: PowerShell@2
     displayName: build and push multiarch image - latest_dev
     inputs:
       targetType: 'inline'
       script: |
         docker buildx build -t ${{ parameters.registry }}/${{ parameters.repository }}/${{ parameters.appName }}:latest_dev --platform ${{ parameters.platforms }} --push $(System.ArtifactsDirectory)/.
-      failOnStderr: true
+      failOnStderr: false
   - task: PowerShell@2
     displayName: build and push multiarch image - $(Build.BuildId)
     inputs:
       targetType: 'inline'
       script: |
         docker buildx build -t ${{ parameters.registry }}/${{ parameters.repository }}/${{ parameters.appName }}:$(Build.BuildId) --platform ${{ parameters.platforms }} --push $(System.ArtifactsDirectory)/.
-      failOnStderr: true
+      failOnStderr: false
   - task: Docker@2
     displayName: Build for the latest
   - task: PowerShell@2
@@ -80,4 +80,4 @@ steps:
       targetType: 'inline'
       script: |
         docker buildx build -t ${{ parameters.registry }}/${{ parameters.repository }}/${{ parameters.appName }}:latest --platform ${{ parameters.platforms }} --push $(System.ArtifactsDirectory)/.
-      failOnStderr: true
+      failOnStderr: false
