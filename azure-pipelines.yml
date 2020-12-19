@@ -36,7 +36,7 @@ stages:
       displayName: package image as tar
       inputs:
         targetType: 'inline'
-        script: 'docker save bmcclure/vsce:latest -o $(Pipeline.Workspace)\a\bmcclure_vsce.tar'
+        script: 'docker save bmcclure/vsce:latest -o bmcclure_vsce.tar'
     - task: PublishPipelineArtifact@1
       inputs:
         targetPath: '$(Pipeline.Workspace)\a'
