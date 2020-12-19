@@ -4,8 +4,8 @@
 
 trigger:
 - main
-pr:
-- main
+# pr:
+# - main
 
 resources:
 - repo: self
@@ -32,7 +32,7 @@ stages:
     - task: PowerShell@2
       inputs:
         targetType: 'inline'
-        script: 'docker buildx inspect --bootstrap; docker buildx build -t bmcclure89/vsce:latest --platform linux/arm/v7 --load .'
+        script: 'docker buildx create --name nubuilder; docker buildx use nubuilder; docker buildx inspect --bootstrap; docker buildx build -t bmcclure89/vsce:latest --platform linux/arm/v7 --load .'
     - task: PowerShell@2
       inputs:
         targetType: 'inline'
