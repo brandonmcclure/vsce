@@ -1,0 +1,1 @@
+A simple docker image to run the [vsce](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) program to package and publish VS Code extensions
