@@ -14,42 +14,47 @@ variables:
   tag: '$(Build.BuildId)'
 
 stages:
-- stage: Build
-  displayName: Build image
-  jobs:  
-  - job: Build
-    displayName: Build
+- stage: PrepImage
+  displayName: Prep docker image
+  jobs:
+  - job: PrepImage
+    displayName: Prep image
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-    - task: Docker@2
+    - checkout: self
+    - task: CopyFiles@2
       inputs:
-        containerRegistry: 'Brandon''s Docker Hub'
-        command: 'login'
-    - task: PowerShell@2
-      displayName: prep buildx
-      inputs:
-        targetType: 'inline'
-        script: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes; docker buildx rm default; docker buildx create --name nubuilder; docker buildx use nubuilder; docker buildx inspect --bootstrap;
-    - task: PowerShell@2
-      displayName: build and push multiarch image
-      inputs:
-        targetType: 'inline'
-        script: ' docker buildx build -t docker.io/bmcclure89/vsce:latest_dev --platform linux/amd64,linux/arm64,linux/arm/v7 --push .'
-    - task: PowerShell@2
-      displayName: package image
-      inputs:
-        targetType: inline
-        script: 'docker save docker.io/bmcclure/vsce:latest -o $(Pipeline.Workspace)\a\bmcclure_vsce.tar'
-      enabled: false
+        SourceFolder: ''
+        Contents: '**'
+        TargetFolder: '$(build.artifactstagingdirectory)'
+        CleanTargetFolder: true
+        OverWrite: true
+        preserveTimestamp: true
     - task: PublishPipelineArtifact@1
+      displayName: publish docker_context artifact
       inputs:
-        targetPath: '$(Pipeline.Workspace)\a'
-        artifact: 'Image'
+        targetPath: '$(build.artifactstagingdirectory)'
+        artifact: 'docker_context'
         publishLocation: 'pipeline'
-      enabled: false
-    - task: Docker@2
-      inputs:
-        containerRegistry: 'Brandon''s Docker Hub'
-        command: 'logout'
+- stage: BuildMultiArchImage
+  displayName: Build image 
+  dependsOn: PrepImage  
+  jobs:
+    - job: BuildAndPublishImage
+      displayName: Build and publish image
+      pool:
+        vmImage: 'ubuntu-latest'
+      steps:
+        - task: Docker@2
+          inputs:
+            containerRegistry: 'Brandon''s Docker Hub'
+            command: 'login'
+        - template: 'Build-DockerImage.yml'
+          parameters: 
+            appName: vsce
+        - task: Docker@2
+          inputs:
+            containerRegistry: 'Brandon''s Docker Hub'
+            command: 'logout'
     
