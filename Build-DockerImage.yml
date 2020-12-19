@@ -8,9 +8,6 @@ parameters:
 - name: appName
   type: string
   default: nullValue
-- name: dockerVersion
-  type: string
-  default: '17.09.0-ce'
 - name: buildArguments
   type: string
   default: ''
@@ -26,10 +23,6 @@ steps:
       buildType: 'current'
       artifactName: 'docker_context'
       targetPath: '$(System.ArtifactsDirectory)'
-  - task: DockerInstaller@0
-    displayName: Docker installer
-    inputs:
-      dockerVersion: '${{ parameters.dockerVersion }}'
   - task: PowerShell@2
     displayName: prep buildx
     inputs:
