@@ -59,13 +59,13 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        docker buildx build -t ${{ parameters.registry }}/${{ parameters.repository }}/${{ parameters.appName }}:latest_dev --platform ${{ parameters.platforms }} --push .'
+        docker buildx build -t ${{ parameters.registry }}/${{ parameters.repository }}/${{ parameters.appName }}:latest_dev --platform ${{ parameters.platforms }} --push .
   - task: PowerShell@2
     displayName: build and push multiarch image - $(Build.BuildId)
     inputs:
       targetType: 'inline'
       script: |
-        docker buildx build -t ${{ parameters.registry }}/${{ parameters.repository }}/${{ parameters.appName }}:$(Build.BuildId) --platform ${{ parameters.platforms }} --push .'
+        docker buildx build -t ${{ parameters.registry }}/${{ parameters.repository }}/${{ parameters.appName }}:$(Build.BuildId) --platform ${{ parameters.platforms }} --push .
   - task: Docker@2
     displayName: Build for the latest
   - task: PowerShell@2
@@ -74,4 +74,4 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        docker buildx build -t ${{ parameters.registry }}/${{ parameters.repository }}/${{ parameters.appName }}:latest --platform ${{ parameters.platforms }} --push .'
+        docker buildx build -t ${{ parameters.registry }}/${{ parameters.repository }}/${{ parameters.appName }}:latest --platform ${{ parameters.platforms }} --push .
