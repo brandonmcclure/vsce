@@ -81,9 +81,3 @@ steps:
       targetType: 'inline'
       script: |
         docker buildx build -t ${{ parameters.registry }}/${{ parameters.repository }}/${{ parameters.appName }}:latest --platform ${{ parameters.platforms }} --push .'
-
-  - task: Docker@2
-    displayName: logout
-    inputs:
-      containerRegistry: 'Build Registry v1'
-      command: 'logout'
