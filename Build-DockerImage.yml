@@ -52,7 +52,8 @@ steps:
       targetType: 'inline'
       script: |
         Write-Host "Build arguments: ${{ parameters.buildArguments }}"
-        Write-Host "Repository: ${{ parameters.repository }}_dev/${{ parameters.appName }}"
+        Write-Host "Repository: ${{ parameters.registry }}/${{ parameters.repository }}/${{ parameters.appName }}"
+        Write-Host "platforms: ${{ parameters.platforms }}"
   - task: PowerShell@2
     displayName: build and push multiarch image - latest_dev
     inputs:
