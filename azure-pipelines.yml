@@ -31,7 +31,7 @@ stages:
       inputs:
         command: build
         dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-        arguments: 'buildx --platform linux/arm/v7 --load'
+        arguments: 'buildx --platform linux/arm/v7'
         tags: |
           $(tag)
     - task: PowerShell@2
