@@ -71,8 +71,6 @@ steps:
       script: |
         docker buildx build -t ${{ parameters.registry }}/${{ parameters.repository }}/${{ parameters.appName }}:$(Build.BuildId) --platform ${{ parameters.platforms }} --push $(System.ArtifactsDirectory)/.
       failOnStderr: false
-  - task: Docker@2
-    displayName: Build for the latest
   - task: PowerShell@2
     condition: and(succeeded(),eq(variables['Build.SourceBranch'], 'refs/heads/main'))
     displayName: build and push multiarch image - latest
