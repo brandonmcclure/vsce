@@ -32,10 +32,10 @@ stages:
         targetType: 'inline'
         script: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes; docker buildx rm default; docker buildx create --name nubuilder; docker buildx use nubuilder; docker buildx inspect --bootstrap;
     - task: PowerShell@2
-      displayName: build image
+      displayName: build and push multiarch image
       inputs:
         targetType: 'inline'
-        script: ' docker buildx build -t docker.io/bmcclure89/vsce:latest_dev --platform linux/arm/v7 --load .'
+        script: ' docker buildx build -t docker.io/bmcclure89/vsce:latest_dev --platform linux/amd64,linux/arm64,linux/arm/v7 --push .'
     - task: PowerShell@2
       displayName: package image
       inputs:
@@ -48,11 +48,6 @@ stages:
         artifact: 'Image'
         publishLocation: 'pipeline'
       enabled: false
-    - task: PowerShell@2
-      displayName: publish image
-      inputs:
-        targetType: inline
-        script: 'docker image ls; docker push docker.io/bmcclure/vsce:latest_dev'
     - task: Docker@2
       inputs:
         containerRegistry: 'Brandon''s Docker Hub'
