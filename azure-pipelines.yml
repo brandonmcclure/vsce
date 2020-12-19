@@ -22,6 +22,10 @@ stages:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
+    - task: Docker@2
+      inputs:
+        containerRegistry: 'Brandon''s Docker Hub'
+        command: 'login'
     - task: PowerShell@2
       displayName: prep buildx
       inputs:
@@ -31,10 +35,27 @@ stages:
       displayName: build image
       inputs:
         targetType: 'inline'
-        script: ' docker buildx build -t bmcclure89/vsce:latest --platform linux/arm/v7 --load .;docker save bmcclure/vsce:latest -o $(Pipeline.Workspace)\a\bmcclure_vsce.tar'
+        script: ' docker buildx build -t bmcclure89/vsce:latest_dev --platform linux/arm/v7 --load .'
+    - task: PowerShell@2
+      displayName: package image
+      inputs:
+        targetType: inline
+        script: 'docker save bmcclure/vsce:latest -o $(Pipeline.Workspace)\a\bmcclure_vsce.tar'
+      enabled: false
     - task: PublishPipelineArtifact@1
       inputs:
         targetPath: '$(Pipeline.Workspace)\a'
         artifact: 'Image'
         publishLocation: 'pipeline'
+      enabled: false
+    - task: PowerShell@2
+      displayName: package image
+      inputs:
+        targetType: inline
+        script: 'docker push bmcclure/vsce:latest_dev'
+      enabled: false
+    - task: Docker@2
+      inputs:
+        containerRegistry: 'Brandon''s Docker Hub'
+        command: 'logout'
     
