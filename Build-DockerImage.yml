@@ -1,0 +1,81 @@
+parameters:
+- name: registry
+  type: string
+  default: docker.io
+- name: repository
+  type: string
+  default: bmcclure89
+- name: appName
+  type: string
+  default: nullValue
+- name: buildArguments
+  type: string
+  default: ''
+- name: platforms
+  type: string
+  default: linux/amd64,linux/arm64,linux/arm/v7
+
+steps:
+  - checkout: none
+  - task: DownloadPipelineArtifact@2
+    displayName: Download docker_context from pipeline
+    inputs:
+      buildType: 'current'
+      artifactName: 'docker_context'
+      targetPath: '$(System.ArtifactsDirectory)'
+  - task: PowerShell@2
+    displayName: prep buildx
+    inputs:
+      targetType: 'inline'
+      script: |
+        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes; docker buildx rm default; 
+        docker buildx create --name nubuilder; 
+        docker buildx use nubuilder; docker buildx inspect --bootstrap
+      failOnStderr: false
+  - task: PowerShell@2
+    displayName: Ensure unix line endings
+    inputs:
+      targetType: 'inline'
+      script: |
+        Write-Host "Ensuring unix/lf line endings in text files"
+        $files = Get-ChildItem -Path "$(System.ArtifactsDirectory)" -File
+        foreach ($file in $files){
+          if ($file.Length -gt 1000000){
+            Write-Warning "I can't process a file larger than 1 MB, skipping"
+            Continue
+          }
+          $text = [IO.File]::ReadAllText($file.FullName) -replace "`r`n", "`n"
+          [IO.File]::WriteAllText($file.FullName, $text)
+        }
+      failOnStderr: false
+  - task: PowerShell@2
+    displayName: Log the pipeline variables
+    inputs:
+      targetType: 'inline'
+      script: |
+        Write-Host "Build arguments: ${{ parameters.buildArguments }}"
+        Write-Host "Repository: ${{ parameters.registry }}/${{ parameters.repository }}/${{ parameters.appName }}"
+        Write-Host "platforms: ${{ parameters.platforms }}"
+      failOnStderr: false
+  - task: PowerShell@2
+    displayName: build and push multiarch image - latest_dev
+    inputs:
+      targetType: 'inline'
+      script: |
+        docker buildx build -t ${{ parameters.registry }}/${{ parameters.repository }}/${{ parameters.appName }}:latest_dev --platform ${{ parameters.platforms }} --push $(System.ArtifactsDirectory)/.
+      failOnStderr: false
+  - task: PowerShell@2
+    displayName: build and push multiarch image - $(Build.BuildId)
+    inputs:
+      targetType: 'inline'
+      script: |
+        docker buildx build -t ${{ parameters.registry }}/${{ parameters.repository }}/${{ parameters.appName }}:$(Build.BuildId) --platform ${{ parameters.platforms }} --push $(System.ArtifactsDirectory)/.
+      failOnStderr: false
+  - task: PowerShell@2
+    condition: and(succeeded(),eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    displayName: build and push multiarch image - latest
+    inputs:
+      targetType: 'inline'
+      script: |
+        docker buildx build -t ${{ parameters.registry }}/${{ parameters.repository }}/${{ parameters.appName }}:latest --platform ${{ parameters.platforms }} --push $(System.ArtifactsDirectory)/.
+      failOnStderr: false
