@@ -52,7 +52,7 @@ stages:
       displayName: publish image
       inputs:
         targetType: inline
-        script: 'docker push bmcclure/vsce:latest_dev'
+        script: 'docker image ls; docker push bmcclure/vsce:latest_dev'
     - task: Docker@2
       inputs:
         containerRegistry: 'Brandon''s Docker Hub'
