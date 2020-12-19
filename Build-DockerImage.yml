@@ -30,7 +30,7 @@ steps:
       script: |
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes; docker buildx rm default; 
         docker buildx create --name nubuilder; 
-        docker buildx use nubuilder; docker buildx inspect --bootstra
+        docker buildx use nubuilder; docker buildx inspect --bootstrap
   - task: PowerShell@2
     displayName: Ensure unix line endings
     inputs:
