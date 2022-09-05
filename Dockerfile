@@ -1,4 +1,4 @@
-FROM node:lts-alpine3.12
+FROM node:15
 
 RUN npm install -g vsce
 
