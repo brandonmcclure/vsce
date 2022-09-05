@@ -5,6 +5,10 @@
 
 version: 2
 updates:
+  - package-ecosystem: "github-actions" # See https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#package-ecosystem
+    directory: "/.github/workflows" # Location of package manifests
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "docker" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
