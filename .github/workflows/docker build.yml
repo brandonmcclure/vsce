@@ -1,3 +1,4 @@
+---
 name: Docker build image
 
 on:
@@ -6,21 +7,21 @@ on:
     - cron: '0 0 * * 0'
   push:
     branches:
-      - main  # Trigger CI on main branch
-    paths: 
-      - 'Dockerfile'
-      - '.github/workflows/docker build.yml'
+      - main
+    paths:
+      - Dockerfile
+      - .github/workflows/docker build.yml
   pull_request:
     branches:
-      - main  # Trigger gated pipeline on PR to main
+      - main
     paths:
-      - 'Dockerfile'
-      - '.github/workflows/docker build.yml'
+      - Dockerfile
+      - .github/workflows/docker build.yml
 
 env:
-  REGISTRY: ghcr.io
   IMAGE_NAME: brandonmcclure/vsce
   JUST_IMAGE_NAME: vsce
+  DOCKER_HUB_USERNAME: bmcclure89
 
 jobs:
   build-and-push-image:
@@ -31,22 +32,25 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Log in to the Container registry
-        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d
+      - name: Log in to the Github Container registry
+        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
+
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Login to DockerHub
-        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d
+        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20
         with:
-          username: bmcclure89
+          username: ${{ env.DOCKER_HUB_USERNAME }}
+
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+        if: github.ref == 'refs/heads/main'
       - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@507c2f2dc502c992ad446e3d7a5dfbe311567a96
+        id: meta_github
+        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
         with:
           tags: |
             type=ref,event=pr
@@ -54,34 +58,43 @@ jobs:
             type=sha,format=long
             type=raw,value=latest
           images: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-            bmcclure89/${{ env.JUST_IMAGE_NAME }}
-
+            ghcr.io/${{ env.IMAGE_NAME }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta_dockerhub
+        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
+        with:
+          tags: |
+            type=ref,event=pr
+            type=ref,event=branch
+            type=sha,format=long
+            type=raw,value=latest
+          images: |
+            ${{ env.DOCKER_HUB_USERNAME }}/${{ env.JUST_IMAGE_NAME }}
+        if: github.ref == 'refs/heads/main'
       - name: Build Docker image (non main branch)
-        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56
+        uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
         if: github.ref != 'refs/heads/main'
         with:
           context: .
-          load: true
-          push: false
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }} 
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.meta_github.outputs.tags }}
+          labels: ${{ steps.meta_github.outputs.labels }} 
       - name: Build and push Docker image (main branch)
-        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56
+        uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
         if: github.ref == 'refs/heads/main'
         with:
           context: .
+          file: Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }} 
-      - id: lowercaseImageName
-        uses: ASzc/change-string-case-action@v6
+          tags: ${{ steps.meta_dockerhub.outputs.tags }}
+          labels: ${{ steps.meta_dockerhub.outputs.labels }}
+      - name: Build and push Docker image (main branch)
+        uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
+        if: github.ref == 'refs/heads/main'
         with:
-          string: ${{ env.IMAGE_NAME }}
-      - name: Save Docker Image archive to local filesystem
-        run: "docker save --output vsce.tar ${{env.REGISTRY}}/${{ steps.lowercaseImageName.outputs.lowercase }}"
-      - name: Upload application's Docker Image as pipeline artifact
-        uses: actions/upload-artifact@v3
-        with:
-          path: vsce.tar
-          name: vsce.tar
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.meta_github.outputs.tags }}
+          labels: ${{ steps.meta_github.outputs.labels }}
