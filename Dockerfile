@@ -1,4 +1,4 @@
-FROM node:21
+FROM node:22
 
 RUN npm install -g @vscode/vsce@2.26.0
 
