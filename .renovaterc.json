@@ -1,0 +1,41 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:best-practices",
+    ":approveMajorUpdates",
+    "group:postcss",
+    "group:linters", 
+    ":dependencyDashboard"
+  ],
+  "ignorePresets": [
+    ":semanticPrefixFixDepsChoreOthers",
+    "docker:pinDigests",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "semanticCommits": "disabled",
+  "postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths", "npmDedupe"],
+  "platformAutomerge": false,
+  "prConcurrentLimit": 5,
+  "osvVulnerabilityAlerts": true,
+  "ignorePaths": [
+      ".forgejo/workflows/*"
+  ],
+  "packageRules": [
+    {
+      "description": "Require approval for go and python minor version",
+      "matchDepNames": ["go", "python", "golang", "docker.io/golang", "docker.io/library/golang"],
+      "matchUpdateTypes": ["minor"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Group golang packages",
+      "matchDepNames": ["go", "golang", "docker.io/golang", "docker.io/library/golang"],
+      "groupName": "golang packages"
+    },
+    {
+      "description": "Group nodejs packages",
+      "matchDepNames": ["node", "docker.io/node", "docker.io/library/node"],
+      "groupName": "nodejs packages"
+    }
+  ]
+}
